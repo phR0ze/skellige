@@ -1,11 +1,20 @@
-// Unit tests
-// -------------------------------------------------------------------------------------------------
-#[cfg(test)]
-mod tests {
-    // use super::*;
+mod error;
+mod git;
 
-    // #[test]
-    // fn test_color_enabled() {
-    //     assert!(Color::enabled() || !Color::enabled());
-    // }
+/// All essential symbols in a simple consumable way
+///
+/// ### Examples
+/// ```
+/// use fungus::prelude::*;
+/// ```
+pub mod prelude {
+    // Export all types inside the git module for namespace clarity
+    pub mod git {
+        pub use crate::error::Error;
+        pub use crate::error::Result;
+        pub use crate::git::*;
+    }
+
+    // Re-export fungus
+    pub use fungus::prelude::*;
 }
