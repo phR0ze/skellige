@@ -38,6 +38,7 @@ impl<'a> RepoGroup<'a> {
     /// let group = git::RepoGroup::new();
     /// group.add(git::Repo::new("foo").unwrap());
     /// ```
+    #[allow(clippy::should_implement_trait)]
     pub fn add(mut self, repo: Repo<'a>) -> Self {
         self.repos.push(repo);
         self
@@ -85,12 +86,13 @@ impl<'a> RepoGroup<'a> {
     /// assert_eq!(repo2file.exists(), true);
     /// assert!(sys::remove_all(&tmpdir).is_ok());
     /// ```
+    #[allow(clippy::should_implement_trait)]
     pub fn clone(&self) -> Result<()> {
         let mut threads = Vec::new();
         for repo in &self.repos {
             // Note: I had to make 'path' and 'url' owned types for the thread lifetime to work
             let path = repo.path_val().to_path_buf();
-            let url = repo.url_val().ok_or_else(|| Error::UrlNotSet)?.to_string();
+            let url = repo.url_val().ok_or(Error::UrlNotSet)?.to_string();
 
             if self.progress.is_none() {
                 threads.push(thread::spawn(move || {
@@ -169,7 +171,7 @@ impl<'a> RepoGroup<'a> {
         for repo in &self.repos {
             // Note: I had to make 'path' and 'url' owned types for the thread lifetime to work
             let path = repo.path_val().to_path_buf();
-            let url = repo.url_val().ok_or_else(|| Error::UrlNotSet)?.to_string();
+            let url = repo.url_val().ok_or(Error::UrlNotSet)?.to_string();
 
             if self.progress.is_none() {
                 threads.push(thread::spawn(move || {
@@ -405,7 +407,7 @@ impl<'a> Repo<'a> {
         T: AsRef<Path>,
     {
         let path = path.as_ref().abs()?;
-        Ok(Self { path: path, ..Default::default() })
+        Ok(Self { path, ..Default::default() })
     }
 
     /// Returns the message from the head commit.
@@ -424,7 +426,7 @@ impl<'a> Repo<'a> {
     pub fn last_msg(&self) -> Result<String> {
         let repo = Repository::open(self.path_val())?;
         let head = repo.head()?.peel_to_commit()?;
-        let msg = head.message().ok_or_else(|| Error::NoMessageWasFound)?;
+        let msg = head.message().ok_or(Error::NoMessageWasFound)?;
         Ok(msg.trim_end().to_string())
     }
 
@@ -495,7 +497,7 @@ impl<'a> Repo<'a> {
             builder.with_checkout(checkout_bldr);
         }
 
-        let url = self.url_val().ok_or_else(|| Error::UrlNotSet)?;
+        let url = self.url_val().ok_or(Error::UrlNotSet)?;
         let path = self.path_val();
         builder.clone(url, path)?;
         Ok(self.path.clone())
@@ -544,7 +546,7 @@ impl<'a> Repo<'a> {
 
             // Check if we need to update or not
             if analysis.is_up_to_date() {
-                return Ok(self.path.clone());
+                return Ok(self.path);
             } else if analysis.is_fast_forward() {
                 let refname = "refs/heads/master";
                 let mut reference = repo.find_reference(&refname)?;
@@ -552,10 +554,10 @@ impl<'a> Repo<'a> {
                 repo.set_head(&refname)?;
                 repo.checkout_head(Some(git2::build::CheckoutBuilder::default().force()))?;
             } else {
-                return Err(Error::FastForwardOnly.into());
+                return Err(Error::FastForwardOnly);
             }
         }
-        Ok(self.path.clone())
+        Ok(self.path)
     }
 }
 
@@ -586,7 +588,7 @@ where
 /// ```
 /// use skellige::prelude::*;
 ///
-/// assert!(git::remote_branch_exists_err("https://github.com/phR0ze/alpine-base.git", "master").is_ok());
+/// assert!(git::remote_branch_exists("https://github.com/phR0ze/alpine-base.git", "master").is_ok());
 /// ```
 pub fn remote_branch_exists<T, U>(url: T, branch: U) -> Result<()>
 where
@@ -812,18 +814,10 @@ mod tests {
 
     #[test]
     fn test_remote_branch_exists() {
-        assert_eq!(git::remote_branch_exists("https://git.archlinux.org/svntogit/packages.git", "packages/foobar"), false);
-        assert_eq!(git::remote_branch_exists("https://git.archlinux.org/svntogit/packages.git", "packages/pkgfile"), true);
-        assert_eq!(git::remote_branch_exists("https://github.com/phR0ze/alpine-base.git", "master"), true);
-        assert_eq!(git::remote_branch_exists("https://git.archlinux.org/svntogit/community.git", "packages/acme"), true);
-    }
-
-    #[test]
-    fn test_remote_branch_exists_err() {
-        assert!(git::remote_branch_exists_err("https://github.com/phR0ze/alpine-base.git", "master").is_ok());
-        assert!(git::remote_branch_exists_err("https://git.archlinux.org/svntogit/packages.git", "packages/foobar").is_err());
-        assert!(git::remote_branch_exists_err("https://git.archlinux.org/svntogit/packages.git", "packages/pkgfile").is_ok());
-        assert!(git::remote_branch_exists_err("https://git.archlinux.org/svntogit/community.git", "packages/acme").is_ok());
+        assert!(git::remote_branch_exists("https://github.com/phR0ze/alpine-base.git", "master").is_ok());
+        assert!(git::remote_branch_exists("https://git.archlinux.org/svntogit/packages.git", "packages/foobar").is_err());
+        assert!(git::remote_branch_exists("https://git.archlinux.org/svntogit/packages.git", "packages/pkgfile").is_ok());
+        assert!(git::remote_branch_exists("https://git.archlinux.org/svntogit/community.git", "packages/acme").is_ok());
     }
 
     #[test]
