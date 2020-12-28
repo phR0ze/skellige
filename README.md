@@ -16,6 +16,7 @@
 * [License](#license)
   * [Contribution](#contribution)
 * [Backlog](#backlog)
+* [Changelog](#changelog)
 
 ## Contribute <a name="Contribute"/></a>
 Pull requests are always welcome. However understand that they will be evaluated purely on whether
@@ -41,4 +42,7 @@ any additional terms or conditions.
 ---
 
 ## Backlog <a name="backlog"/></a>
-* Refactor git functions from fungus to here
+
+## Changelog <a name="changelog"/></a>
+* 12/28/2020
+  * Use fungus as a dependency
