@@ -3,6 +3,7 @@ mod git;
 
 // Re-exports
 pub use fungus;
+pub use git2;
 
 /// All essential symbols in a simple consumable way
 ///
