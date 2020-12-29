@@ -42,9 +42,27 @@ impl Error {
     pub fn repo_not_found<T: AsRef<str>>(repo: T) -> Error {
         Error::RepoNotFound(repo.as_ref().to_string())
     }
-}
 
-impl StdError for Error {}
+    /// Implemented directly on the `Error` type to reduce casting required
+    pub fn is<T: StdError + 'static>(&self) -> bool {
+        self.as_ref().is::<T>()
+    }
+
+    /// Implemented directly on the `Error` type to reduce casting required
+    pub fn downcast_ref<T: StdError + 'static>(&self) -> Option<&T> {
+        self.as_ref().downcast_ref::<T>()
+    }
+
+    /// Implemented directly on the `Error` type to reduce casting required
+    pub fn downcast_mut<T: StdError + 'static>(&mut self) -> Option<&mut T> {
+        self.as_mut().downcast_mut::<T>()
+    }
+
+    /// Implemented directly on the `Error` type to reduce casting required
+    pub fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        self.as_ref().source()
+    }
+}
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -63,15 +81,37 @@ impl std::fmt::Display for Error {
 
 impl AsRef<dyn StdError> for Error {
     fn as_ref(&self) -> &(dyn StdError + 'static) {
-        self
+        match *self {
+            Error::BranchNotFound(_) => self,
+            Error::FastForwardOnly => self,
+            // Unwrap a fungus error so it is transparent
+            Error::Fungus(ref err) => err.as_ref(),
+            Error::Git2(ref err) => err,
+            Error::NoMessageWasFound => self,
+            Error::RepoNotFound(_) => self,
+            Error::Progress(ref err) => err,
+            Error::UrlNotSet => self,
+        }
     }
 }
 
 impl AsMut<dyn StdError> for Error {
     fn as_mut(&mut self) -> &mut (dyn StdError + 'static) {
-        self
+        match *self {
+            Error::BranchNotFound(_) => self,
+            Error::FastForwardOnly => self,
+            // Unwrap a fungus error so it is transparent
+            Error::Fungus(ref mut err) => err.as_mut(),
+            Error::Git2(ref mut err) => err,
+            Error::NoMessageWasFound => self,
+            Error::RepoNotFound(_) => self,
+            Error::Progress(ref mut err) => err,
+            Error::UrlNotSet => self,
+        }
     }
 }
+
+impl StdError for Error {}
 
 impl From<git2::Error> for Error {
     fn from(err: git2::Error) -> Error {
@@ -94,26 +134,83 @@ impl From<fungus::FuError> for Error {
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
-    use std::io;
 
     #[test]
     fn test_errors() {
-        assert_eq!(git::Error::branch_not_found("foo").to_string(), git::Error::BranchNotFound("foo".to_string()).to_string());
-        assert_eq!("failed to find branch: foo", git::Error::BranchNotFound("foo".to_string()).to_string());
-        assert_eq!("only fast-forward supported", git::Error::FastForwardOnly.to_string());
+        // Error::BranchNotFound(String)
+        let mut err = git::Error::BranchNotFound("foo".to_string());
+        assert_eq!(git::Error::branch_not_found("foo").to_string(), err.to_string());
+        assert_eq!("failed to find branch: foo", err.to_string());
+        assert_eq!("failed to find branch: foo", err.as_ref().to_string());
+        assert_eq!("failed to find branch: foo", err.as_mut().to_string());
+        assert!(err.downcast_ref::<git::Error>().is_some());
+        assert!(err.downcast_mut::<git::Error>().is_some());
+        assert!(err.source().is_none());
 
-        let err = git::Error::from(git2::Error::new(git2::ErrorCode::Ambiguous, git2::ErrorClass::Checkout, "foo"));
+        // FastForwardOnly,
+        let mut err = git::Error::FastForwardOnly;
+        assert_eq!("only fast-forward supported", err.to_string());
+        assert_eq!("only fast-forward supported", err.to_string());
+        assert_eq!("only fast-forward supported", err.as_ref().to_string());
+        assert_eq!("only fast-forward supported", err.as_mut().to_string());
+        assert!(err.downcast_ref::<git::Error>().is_some());
+        assert!(err.downcast_mut::<git::Error>().is_some());
+        assert!(err.source().is_none());
+
+        // Fungus(fungus::FuError),
+        let mut err = git::Error::from(FuError::from(FileError::FailedToExtractString));
+        assert_eq!("failed to extract string from file", err.to_string());
+        assert_eq!("failed to extract string from file", err.as_ref().to_string());
+        assert_eq!("failed to extract string from file", err.as_mut().to_string());
+        assert!(err.downcast_ref::<FileError>().is_some());
+        assert!(err.downcast_mut::<FileError>().is_some());
+        assert!(err.source().is_none());
+
+        // Git2(git2::Error),
+        let mut err = git::Error::from(git2::Error::new(git2::ErrorCode::Ambiguous, git2::ErrorClass::Checkout, "foo"));
         assert_eq!("foo; class=Checkout (20); code=Ambiguous (-5)", err.to_string());
+        assert_eq!("foo; class=Checkout (20); code=Ambiguous (-5)", err.as_ref().to_string());
+        assert_eq!("foo; class=Checkout (20); code=Ambiguous (-5)", err.as_mut().to_string());
+        assert!(err.downcast_ref::<git2::Error>().is_some());
+        assert!(err.downcast_mut::<git2::Error>().is_some());
+        assert!(err.source().is_none());
 
-        let mut err = git::Error::from(FuError::from(io::Error::new(io::ErrorKind::AlreadyExists, "foo")));
+        // NoMessageWasFound,
+        let mut err = git::Error::NoMessageWasFound;
+        assert_eq!("no message was found for commit", err.to_string());
+        assert_eq!("no message was found for commit", err.as_ref().to_string());
+        assert_eq!("no message was found for commit", err.as_mut().to_string());
+        assert!(err.downcast_ref::<git::Error>().is_some());
+        assert!(err.downcast_mut::<git::Error>().is_some());
+        assert!(err.source().is_none());
+
+        // Progress(io::Error),
+        let mut err = git::Error::from(io::Error::new(io::ErrorKind::AlreadyExists, "foo"));
         assert_eq!("foo", err.to_string());
         assert_eq!("foo", err.as_ref().to_string());
         assert_eq!("foo", err.as_mut().to_string());
+        assert!(err.downcast_ref::<io::Error>().is_some());
+        assert!(err.downcast_mut::<io::Error>().is_some());
+        assert!(err.source().is_none());
 
-        assert_eq!("no message was found for commit", git::Error::NoMessageWasFound.to_string());
-        assert_eq!("foo", git::Error::from(io::Error::new(io::ErrorKind::AlreadyExists, "foo")).to_string());
-        assert_eq!(git::Error::repo_not_found("foo").to_string(), git::Error::RepoNotFound("foo".to_string()).to_string());
-        assert_eq!("failed to find repo: foo", git::Error::RepoNotFound("foo".to_string()).to_string());
-        assert_eq!("no url was set for the repo", git::Error::UrlNotSet.to_string());
+        // RepoNotFound(String),
+        let mut err = git::Error::RepoNotFound("foo".to_string());
+        assert_eq!(git::Error::repo_not_found("foo").to_string(), err.to_string());
+        assert_eq!("failed to find repo: foo", err.to_string());
+        assert_eq!("failed to find repo: foo", err.as_ref().to_string());
+        assert_eq!("failed to find repo: foo", err.as_mut().to_string());
+        assert!(err.downcast_ref::<git::Error>().is_some());
+        assert!(err.downcast_mut::<git::Error>().is_some());
+        assert!(err.source().is_none());
+
+        // UrlNotSet,
+        let mut err = git::Error::UrlNotSet;
+        assert_eq!("no url was set for the repo", err.to_string());
+        assert_eq!("no url was set for the repo", err.to_string());
+        assert_eq!("no url was set for the repo", err.as_ref().to_string());
+        assert_eq!("no url was set for the repo", err.as_mut().to_string());
+        assert!(err.downcast_ref::<git::Error>().is_some());
+        assert!(err.downcast_mut::<git::Error>().is_some());
+        assert!(err.source().is_none());
     }
 }
