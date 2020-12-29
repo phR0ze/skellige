@@ -1,11 +1,14 @@
 mod error;
 mod git;
 
+// Re-exports
+pub use fungus;
+
 /// All essential symbols in a simple consumable way
 ///
 /// ### Examples
 /// ```
-/// use fungus::prelude::*;
+/// use skellige::prelude::*;
 /// ```
 pub mod prelude {
     // Export all types inside the git module for namespace clarity
@@ -15,6 +18,6 @@ pub mod prelude {
         pub use crate::git::*;
     }
 
-    // Re-export fungus
+    // Re-exports
     pub use fungus::prelude::*;
 }
