@@ -3,20 +3,36 @@
 [![build](https://github.com/phR0ze/skellige/workflows/build/badge.svg?branch=main)](https://github.com/phR0ze/skellige/actions)
 [![codecov](https://codecov.io/gh/phR0ze/skellige/branch/main/graph/badge.svg?token=BT1GhAqKvc)](https://codecov.io/gh/phR0ze/skellige)
 [![crates.io](https://img.shields.io/crates/v/skellige.svg)](https://crates.io/crates/skellige)
-[![rust-version](https://img.shields.io/badge/rust-latest%20stable-blue.svg)](https://github.com/rust-lang/rust/releases)
+[![Minimum rustc](https://img.shields.io/badge/rustc-1.30+-lightgray.svg)](https://github.com/phR0ze/skellige#rustc-requirements)
 
-***Keep track of your source in a programmatic way***
+***Track and manipulate your source in a programmatic way***
+
+***skellige*** wraps the venerable [`git2`](https://crates.io/crates/git2) crate providing cli
+stylized progress output for common functions like cloning up updating repositories. `skellige`
+introduces a notion of repo groups providing stylized progress for multiple repos at once.
 
 ### Quick links
 * [Usage](#usage)
-  * [Get String](#get-string)
-  * [Control use](#control-use)
+  * [Rustc requirments](#rustc-requirements)
+  * [Clone](#clone)
+  * [Update](#update)
 * [Contribute](#contribute)
   * [Git-Hook](#git-hook)
 * [License](#license)
   * [Contribution](#contribution)
 * [Backlog](#backlog)
 * [Changelog](#changelog)
+
+## Usage <a name="usage"/></a>
+#### Requires rustc >= 1.30 <a name="rustc-requirements"/></a>
+This minimum rustc requirement is driven by the enhancemnts made to [Rust's `std::error::Error`
+handling improvements](https://doc.rust-lang.org/std/error/trait.Error.html#method.source)
+
+### Clone <a name="clone"/></a>
+TBD
+
+### Update <a name="update"/></a>
+TBD
 
 ## Contribute <a name="Contribute"/></a>
 Pull requests are always welcome. However understand that they will be evaluated purely on whether
@@ -42,7 +58,13 @@ any additional terms or conditions.
 ---
 
 ## Backlog <a name="backlog"/></a>
+* Document usage
+* Document examples
+* Add rust docs
+* Determine minimum rustc and update badge
 
 ## Changelog <a name="changelog"/></a>
+* 12/30/2020
+  * Updating documentation a little
 * 12/28/2020
   * Use fungus as a dependency

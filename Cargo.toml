@@ -1,10 +1,10 @@
 [package]
 name = "skellige"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2018"
 authors = ["phR0ze"]
 license = "MIT OR Apache-2.0"
-description = "Add a little color to the task"
+description = "Track and manipulate your source in a programmatic way"
 readme = "README.md"
 homepage = "https://github.com/phR0ze/skellige"
 repository = "https://github.com/phR0ze/skellige"
