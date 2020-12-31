@@ -1,5 +1,4 @@
-use std::error::Error as StdError;
-use std::{fmt, io};
+use std::{error::Error as StdError, fmt, io};
 
 /// `Result<T>` provides a simplified result type with a common error type
 pub type Result<T> = std::result::Result<T, Error>;
@@ -44,22 +43,22 @@ impl Error {
     }
 
     /// Implemented directly on the `Error` type to reduce casting required
-    pub fn is<T: StdError + 'static>(&self) -> bool {
+    pub fn is<T: StdError+'static>(&self) -> bool {
         self.as_ref().is::<T>()
     }
 
     /// Implemented directly on the `Error` type to reduce casting required
-    pub fn downcast_ref<T: StdError + 'static>(&self) -> Option<&T> {
+    pub fn downcast_ref<T: StdError+'static>(&self) -> Option<&T> {
         self.as_ref().downcast_ref::<T>()
     }
 
     /// Implemented directly on the `Error` type to reduce casting required
-    pub fn downcast_mut<T: StdError + 'static>(&mut self) -> Option<&mut T> {
+    pub fn downcast_mut<T: StdError+'static>(&mut self) -> Option<&mut T> {
         self.as_mut().downcast_mut::<T>()
     }
 
     /// Implemented directly on the `Error` type to reduce casting required
-    pub fn source(&self) -> Option<&(dyn StdError + 'static)> {
+    pub fn source(&self) -> Option<&(dyn StdError+'static)> {
         self.as_ref().source()
     }
 }
@@ -80,7 +79,7 @@ impl std::fmt::Display for Error {
 }
 
 impl AsRef<dyn StdError> for Error {
-    fn as_ref(&self) -> &(dyn StdError + 'static) {
+    fn as_ref(&self) -> &(dyn StdError+'static) {
         match *self {
             Error::BranchNotFound(_) => self,
             Error::FastForwardOnly => self,
@@ -96,7 +95,7 @@ impl AsRef<dyn StdError> for Error {
 }
 
 impl AsMut<dyn StdError> for Error {
-    fn as_mut(&mut self) -> &mut (dyn StdError + 'static) {
+    fn as_mut(&mut self) -> &mut (dyn StdError+'static) {
         match *self {
             Error::BranchNotFound(_) => self,
             Error::FastForwardOnly => self,

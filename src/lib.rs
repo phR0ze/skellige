@@ -14,9 +14,10 @@ pub use git2;
 pub mod prelude {
     // Export all types inside the git module for namespace clarity
     pub mod git {
-        pub use crate::error::Error;
-        pub use crate::error::Result;
-        pub use crate::git::*;
+        pub use crate::{
+            error::{Error, Result},
+            git::*,
+        };
     }
 
     // Re-exports

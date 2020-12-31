@@ -1,10 +1,15 @@
 use crate::error::*;
 use fungus::prelude::*;
-use git2::build::{CheckoutBuilder, RepoBuilder};
-use git2::{self, FetchOptions, RemoteCallbacks, Repository};
+use git2::{
+    self,
+    build::{CheckoutBuilder, RepoBuilder},
+    FetchOptions, RemoteCallbacks, Repository,
+};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use std::path::{Path, PathBuf};
-use std::thread;
+use std::{
+    path::{Path, PathBuf},
+    thread,
+};
 
 const TMPDIR: &str = "git";
 
@@ -78,9 +83,9 @@ impl<'a> RepoGroup<'a> {
     /// let repo2file = repo2.mash("README.md");
     /// assert!(sys::mkdir(&tmpdir).is_ok());
     /// let repos = git::RepoGroup::new()
-    ///    .with_progress(true)
-    ///    .add(git::Repo::new(&repo1).unwrap().url("https://github.com/phR0ze/alpine-base"))
-    ///    .add(git::Repo::new(&repo2).unwrap().url("https://github.com/phR0ze/alpine-core"));
+    ///     .with_progress(true)
+    ///     .add(git::Repo::new(&repo1).unwrap().url("https://github.com/phR0ze/alpine-base"))
+    ///     .add(git::Repo::new(&repo2).unwrap().url("https://github.com/phR0ze/alpine-core"));
     /// assert!(repos.clone().is_ok());
     /// assert_eq!(repo1file.exists(), true);
     /// assert_eq!(repo2file.exists(), true);
@@ -158,9 +163,9 @@ impl<'a> RepoGroup<'a> {
     /// let repo2file = repo2.mash("README.md");
     /// assert!(sys::mkdir(&tmpdir).is_ok());
     /// let repos = git::RepoGroup::new()
-    ///    .with_progress(true)
-    ///    .add(git::Repo::new(&repo1).unwrap().url("https://github.com/phR0ze/alpine-base"))
-    ///    .add(git::Repo::new(&repo2).unwrap().url("https://github.com/phR0ze/alpine-core"));
+    ///     .with_progress(true)
+    ///     .add(git::Repo::new(&repo1).unwrap().url("https://github.com/phR0ze/alpine-base"))
+    ///     .add(git::Repo::new(&repo2).unwrap().url("https://github.com/phR0ze/alpine-core"));
     /// assert!(repos.update().is_ok());
     /// assert_eq!(repo1file.exists(), true);
     /// assert_eq!(repo2file.exists(), true);
@@ -235,13 +240,13 @@ impl<'a> RepoGroup<'a> {
 /// Git repository
 #[derive(Default)]
 pub struct Repo<'a> {
-    path: PathBuf,                                            // Repo location on disk
-    url: Option<String>,                                      // Repo location on the network
-    branch_only: bool,                                        // Clone only the given branch
-    branch: Option<String>,                                   // Specific branch to work with
-    xfer_progress: Option<Box<dyn FnMut(u64, u64) + 'a>>,     // Transfer progress callback
-    update_progress: Option<Box<dyn FnMut(u64, u64) + 'a>>,   // Update progress callback
-    checkout_progress: Option<Box<dyn FnMut(u64, u64) + 'a>>, // Checkout progress callback
+    path: PathBuf,                                          // Repo location on disk
+    url: Option<String>,                                    // Repo location on the network
+    branch_only: bool,                                      // Clone only the given branch
+    branch: Option<String>,                                 // Specific branch to work with
+    xfer_progress: Option<Box<dyn FnMut(u64, u64)+'a>>,     // Transfer progress callback
+    update_progress: Option<Box<dyn FnMut(u64, u64)+'a>>,   // Update progress callback
+    checkout_progress: Option<Box<dyn FnMut(u64, u64)+'a>>, // Checkout progress callback
 }
 
 impl<'a> Repo<'a> {
@@ -352,7 +357,7 @@ impl<'a> Repo<'a> {
     /// ```
     pub fn xfer_progress<T>(mut self, func: T) -> Self
     where
-        T: FnMut(u64, u64) + 'a,
+        T: FnMut(u64, u64)+'a,
     {
         self.xfer_progress = Some(Box::new(func));
         self
@@ -368,7 +373,7 @@ impl<'a> Repo<'a> {
     /// ```
     pub fn checkout_progress<T>(mut self, func: T) -> Self
     where
-        T: FnMut(u64, u64) + 'a,
+        T: FnMut(u64, u64)+'a,
     {
         self.checkout_progress = Some(Box::new(func));
         self
@@ -384,7 +389,7 @@ impl<'a> Repo<'a> {
     /// ```
     pub fn update_progress<T>(mut self, func: T) -> Self
     where
-        T: FnMut(u64, u64) + 'a,
+        T: FnMut(u64, u64)+'a,
     {
         self.update_progress = Some(Box::new(func));
         self
@@ -711,13 +716,7 @@ mod tests {
 
         // Clone single branch only repo 2
         assert_eq!(repo2file.exists(), false);
-        assert!(git::Repo::new(&repo2)
-            .unwrap()
-            .url("https://git.archlinux.org/svntogit/packages.git")
-            .branch("packages/pkgfile")
-            .branch_only(true)
-            .clone()
-            .is_ok());
+        assert!(git::Repo::new(&repo2).unwrap().url("https://git.archlinux.org/svntogit/packages.git").branch("packages/pkgfile").branch_only(true).clone().is_ok());
         assert_eq!(repo2file.exists(), true);
 
         assert!(sys::remove_all(&tmpdir).is_ok());
@@ -729,15 +728,21 @@ mod tests {
         let readme = tmpdir.mash("README.md");
         assert!(sys::remove_all(&tmpdir).is_ok());
 
-        assert!(git::Repo::new(&tmpdir)
-            .unwrap()
-            .url("https://github.com/phR0ze/alpine-base")
-            //.xfer_progress(|total, cur| println!("Xfer: {}, {}", total, cur))
-            .xfer_progress(|total, cur| { let _ = total + cur; } )
-            //.checkout_progress(|total, cur| println!("Checkout: {}, {}", total, cur))
-            .checkout_progress(|total, cur| { let _ = total + cur; } )
-            .clone()
-            .is_ok());
+        assert!(
+            git::Repo::new(&tmpdir)
+                .unwrap()
+                .url("https://github.com/phR0ze/alpine-base")
+                //.xfer_progress(|total, cur| println!("Xfer: {}, {}", total, cur))
+                .xfer_progress(|total, cur| {
+                    let _ = total + cur;
+                })
+                //.checkout_progress(|total, cur| println!("Checkout: {}, {}", total, cur))
+                .checkout_progress(|total, cur| {
+                    let _ = total + cur;
+                })
+                .clone()
+                .is_ok()
+        );
         assert_eq!(readme.exists(), true);
         assert_eq!(sys::readlines(&readme).unwrap()[0].starts_with("alpine-base"), true);
         assert!(sys::remove_all(&tmpdir).is_ok());
@@ -848,55 +853,61 @@ mod tests {
         assert!(sys::remove_all(&tmpdir).is_ok());
 
         assert_eq!(git::is_repo(&tmpdir), false);
-        assert!(git::Repo::new(&tmpdir)
-            .unwrap()
-            .url("https://github.com/phR0ze/alpine-base")
-            .xfer_progress(|total, cur| {
-                let _ = total + cur;
-            })
-            .checkout_progress(|total, cur| {
-                let _ = total + cur;
-            })
-            .update_progress(|total, cur| {
-                let _ = total + cur;
-            })
-            .update()
-            .is_ok());
+        assert!(
+            git::Repo::new(&tmpdir)
+                .unwrap()
+                .url("https://github.com/phR0ze/alpine-base")
+                .xfer_progress(|total, cur| {
+                    let _ = total + cur;
+                })
+                .checkout_progress(|total, cur| {
+                    let _ = total + cur;
+                })
+                .update_progress(|total, cur| {
+                    let _ = total + cur;
+                })
+                .update()
+                .is_ok()
+        );
         assert_eq!(git::is_repo(&tmpdir), true);
-        assert!(git::Repo::new(&tmpdir)
-            .unwrap()
-            .url("https://github.com/phR0ze/alpine-base")
-            .xfer_progress(|total, cur| {
-                let _ = total + cur;
-            })
-            .checkout_progress(|total, cur| {
-                let _ = total + cur;
-            })
-            .update_progress(|total, cur| {
-                let _ = total + cur;
-            })
-            .update()
-            .is_ok());
+        assert!(
+            git::Repo::new(&tmpdir)
+                .unwrap()
+                .url("https://github.com/phR0ze/alpine-base")
+                .xfer_progress(|total, cur| {
+                    let _ = total + cur;
+                })
+                .checkout_progress(|total, cur| {
+                    let _ = total + cur;
+                })
+                .update_progress(|total, cur| {
+                    let _ = total + cur;
+                })
+                .update()
+                .is_ok()
+        );
 
         // Now wipe it out and extract a tarball of the repo that needs updated
         let repo = git::Repo::new(&tmpdir).unwrap();
         assert!(sys::remove_all(&tmpdir).is_ok());
         assert!(tar::extract_all(&tarball, &tmpdir).is_ok());
         assert_eq!(repo.last_msg().unwrap(), "Use the workflow name for the badge".to_string());
-        assert!(git::Repo::new(&tmpdir)
-            .unwrap()
-            .url("https://github.com/phR0ze/alpine-base")
-            .xfer_progress(|total, cur| {
-                let _ = total + cur;
-            })
-            .checkout_progress(|total, cur| {
-                let _ = total + cur;
-            })
-            .update_progress(|total, cur| {
-                let _ = total + cur;
-            })
-            .update()
-            .is_ok());
+        assert!(
+            git::Repo::new(&tmpdir)
+                .unwrap()
+                .url("https://github.com/phR0ze/alpine-base")
+                .xfer_progress(|total, cur| {
+                    let _ = total + cur;
+                })
+                .checkout_progress(|total, cur| {
+                    let _ = total + cur;
+                })
+                .update_progress(|total, cur| {
+                    let _ = total + cur;
+                })
+                .update()
+                .is_ok()
+        );
         assert_ne!(repo.last_msg().unwrap(), "Use the workflow name for the badge".to_string());
 
         assert!(sys::remove_all(&tmpdir).is_ok());
